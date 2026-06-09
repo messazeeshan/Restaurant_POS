@@ -8,6 +8,7 @@ export const ORDER_STATUS = {
   PENDING_ADMIN: 'PENDING_ADMIN',
   IN_KITCHEN:    'IN_KITCHEN',
   ACCEPTED:      'ACCEPTED',
+  PREP_STARTED:  'PREP_STARTED',
   READY:         'READY',
   PAID:          'PAID',
   CLOSED:        'CLOSED',
@@ -20,6 +21,7 @@ export const ORDER_STATUS_LABELS = {
   [ORDER_STATUS.PENDING_ADMIN]: 'Pending Approval',
   [ORDER_STATUS.IN_KITCHEN]:    'In Kitchen',
   [ORDER_STATUS.ACCEPTED]:      'Accepted',
+  [ORDER_STATUS.PREP_STARTED]:  'Prep Started',
   [ORDER_STATUS.READY]:         'Ready',
   [ORDER_STATUS.PAID]:          'Paid',
   [ORDER_STATUS.CLOSED]:        'Closed',
@@ -66,8 +68,8 @@ export const TABLE_STATUS_COLORS = {
   [TABLE_STATUS.BILL_REQUESTED]: 'var(--status-bill)',
   [TABLE_STATUS.RESERVED]:       'var(--status-reserved)',
   [TABLE_STATUS.IN_KITCHEN]:     'var(--status-ordered)',
-  [TABLE_STATUS.PAID]:           'var(--status-paid)',
-  [TABLE_STATUS.READY]:          'var(--status-available)',
+  [TABLE_STATUS.PAID]:           '#00C4B5',
+  [TABLE_STATUS.READY]:          '#A855F7',
   [TABLE_STATUS.CLOSED]:         'var(--status-available)',
 };
 

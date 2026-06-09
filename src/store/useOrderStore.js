@@ -144,9 +144,10 @@ const useOrderStore = create((set, get) => ({
         updates.sentAt = now;
         updates.sentToKitchenAt = now;
       }
-      if (finalStatus === ORDER_STATUS.ACCEPTED) updates.acceptedAt = now;
-      if (finalStatus === ORDER_STATUS.READY)     updates.readyAt    = now;
-      if (finalStatus === ORDER_STATUS.PENDING_ADMIN) updates.submittedAt = now;
+      if (finalStatus === ORDER_STATUS.ACCEPTED)      updates.acceptedAt    = now;
+      if (finalStatus === ORDER_STATUS.PREP_STARTED)  updates.prepStartedAt = now;
+      if (finalStatus === ORDER_STATUS.READY)         updates.readyAt       = now;
+      if (finalStatus === ORDER_STATUS.PENDING_ADMIN) updates.submittedAt   = now;
       
       return { ...o, ...updates };
     });
@@ -272,11 +273,12 @@ approvePendingOrder: (orderId, staffId) => {
         o.status !== ORDER_STATUS.REJECTED
     ),
 
-  // Kitchen shows IN_KITCHEN, ACCEPTED, and PAID orders
+  // Kitchen shows IN_KITCHEN, ACCEPTED, PREP_STARTED, and PAID orders
   getKitchenOrders: () =>
     get().orders.filter(
       (o) => o.status === ORDER_STATUS.IN_KITCHEN ||
              o.status === ORDER_STATUS.ACCEPTED ||
+             o.status === ORDER_STATUS.PREP_STARTED ||
              o.status === ORDER_STATUS.PAID
     ),
 

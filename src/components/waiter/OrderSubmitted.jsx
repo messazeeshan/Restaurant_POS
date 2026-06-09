@@ -1,20 +1,26 @@
-import React from 'react';
-import { CheckCircle, Clock, PlusCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle, PlusCircle, CreditCard } from 'lucide-react';
 import { ORDER_STATUS, ORDER_STATUS_LABELS } from '../../data/constants.js';
 import { formatCurrency } from '../../utils/formatters.js';
+import PaymentModal from '../pos/PaymentModal.jsx';
 
 const STATUS_DOT = {
-  [ORDER_STATUS.PENDING_ADMIN]: { color: 'var(--warning)',  label: 'Pending Approval' },
-  [ORDER_STATUS.IN_KITCHEN]:    { color: 'var(--info)',     label: 'In Kitchen' },
-  [ORDER_STATUS.ACCEPTED]:      { color: 'var(--success)',  label: 'Being Prepared' },
-  [ORDER_STATUS.READY]:         { color: 'var(--success)',  label: '🍽 Ready!' },
-  [ORDER_STATUS.REJECTED]:      { color: 'var(--danger)',   label: 'Rejected' },
+  [ORDER_STATUS.PENDING_ADMIN]: { color: 'var(--warning)',   label: 'Pending Approval' },
+  [ORDER_STATUS.IN_KITCHEN]:    { color: 'var(--info)',      label: 'In Kitchen' },
+  [ORDER_STATUS.ACCEPTED]:      { color: 'var(--success)',   label: 'Being Prepared' },
+  [ORDER_STATUS.PREP_STARTED]:  { color: 'var(--warning)',   label: '👨‍🍳 Cooking...' },
+  [ORDER_STATUS.READY]:         { color: 'var(--success)',   label: '🍽 Ready!' },
+  [ORDER_STATUS.PAID]:          { color: 'var(--info)',      label: 'Paid' },
+  [ORDER_STATUS.REJECTED]:      { color: 'var(--danger)',    label: 'Rejected' },
   [ORDER_STATUS.CLOSED]:        { color: 'var(--text-muted)', label: 'Closed' },
 };
 
 export default function OrderSubmitted({ orderId, orders, onNewOrder }) {
   const order = orders.find((o) => o.id === orderId);
   const statusInfo = order ? (STATUS_DOT[order.status] || { color: 'var(--text-muted)', label: order.status }) : null;
+  const [showPayment, setShowPayment] = useState(false);
+
+  const isReady = order?.status === ORDER_STATUS.READY;
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '40px 24px', gap: 24 }}>
@@ -60,6 +66,18 @@ export default function OrderSubmitted({ orderId, orders, onNewOrder }) {
             <span>Total</span>
             <span>{formatCurrency(order.total || 0)}</span>
           </div>
+
+          {/* Take Payment — only when READY and not yet paid */}
+          {isReady && (
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%', justifyContent: 'center', marginTop: 14 }}
+              onClick={() => setShowPayment(true)}
+              id="waiter-take-payment-btn"
+            >
+              <CreditCard size={16} /> Take Payment
+            </button>
+          )}
         </div>
       )}
 
@@ -70,6 +88,15 @@ export default function OrderSubmitted({ orderId, orders, onNewOrder }) {
       >
         <PlusCircle size={18} /> Start New Order
       </button>
+
+      {/* Reuse the manager PaymentModal */}
+      {showPayment && order && (
+        <PaymentModal
+          orderId={order.id}
+          tableId={order.tableId}
+          onClose={() => setShowPayment(false)}
+        />
+      )}
     </div>
   );
 }

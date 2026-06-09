@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { view: VIEW.FLOOR,     label: 'Floor Plan',        icon: LayoutGrid },
   { view: VIEW.ORDERS,    label: 'Orders',             icon: ClipboardList, badge: 'pendingAdmin' },
   { view: VIEW.ORDER,     label: 'New Order',          icon: ShoppingCart },
-  { view: VIEW.KITCHEN,   label: 'Kitchen',            icon: Monitor },
+  { view: VIEW.KITCHEN,   label: 'Kitchen',            icon: Monitor, badge: 'kitchen' },
   { view: VIEW.DELIVERY,  label: 'Delivery & Orders',  icon: Truck, badge: 'delivery' },
   { view: VIEW.MENU,      label: 'Menu',               icon: BookOpen },
   { view: VIEW.STAFF,     label: 'Staff',              icon: Users },
@@ -36,13 +36,14 @@ export default function Sidebar() {
   const { getStaffById } = useStaffStore();
   const { getRestaurantName } = useSettingsStore();
   const { getActiveOrders } = useDeliveryStore();
-  const { getPendingAdminOrders } = useOrderStore();
+  const { getPendingAdminOrders, getKitchenOrders } = useOrderStore();
 
   const currentStaff = getStaffById(currentStaffId);
   const restaurantName = getRestaurantName();
   
   const pendingDeliveryCount = getActiveOrders().filter(o => o.status === 'IN_KITCHEN' || o.status === 'READY').length;
   const pendingAdminCount = getPendingAdminOrders().length;
+  const kitchenCount = getKitchenOrders().length;
 
   return (
     <aside className={`sidebar ${sidebarExpanded ? '' : 'collapsed'}`} aria-label="Main navigation">
@@ -61,7 +62,8 @@ export default function Sidebar() {
       <nav className="sidebar-nav" role="navigation">
       {NAV_ITEMS.map(({ view, label, icon: Icon, badge }) => {
           const badgeCount = badge === 'pendingAdmin' ? pendingAdminCount
-            : badge === 'delivery' ? pendingDeliveryCount
+            : badge === 'kitchen'      ? kitchenCount
+            : badge === 'delivery'     ? pendingDeliveryCount
             : 0;
           return (
             <button
@@ -85,7 +87,7 @@ export default function Sidebar() {
               <span className="nav-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                 {label}
                 {badgeCount > 0 && sidebarExpanded && (
-                  <span style={{ background: badge === 'pendingAdmin' ? 'var(--danger)' : 'var(--sidebar-accent)', color: badge === 'pendingAdmin' ? '#fff' : '#0A0F0C', fontSize: 10, fontWeight: 'bold', padding: '2px 7px', borderRadius: 10 }}>
+                  <span style={{ background: badge === 'pendingAdmin' ? 'var(--danger)' : badge === 'kitchen' ? 'var(--info)' : 'var(--sidebar-accent)', color: badge === 'pendingAdmin' ? '#fff' : badge === 'kitchen' ? '#fff' : '#0A0F0C', fontSize: 10, fontWeight: 'bold', padding: '2px 7px', borderRadius: 10 }}>
                     {badgeCount}
                   </span>
                 )}

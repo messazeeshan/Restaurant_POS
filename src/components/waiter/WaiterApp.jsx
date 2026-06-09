@@ -13,6 +13,7 @@ import {
 import TableSelector from './TableSelector.jsx';
 import WaiterCart from './WaiterCart.jsx';
 import OrderSubmitted from './OrderSubmitted.jsx';
+import KitchenDisplay from '../kitchen/KitchenDisplay.jsx';
 
 export default function WaiterApp({ session }) {
   const { logout } = useAuthStore();
@@ -21,7 +22,7 @@ export default function WaiterApp({ session }) {
   const { initialize: initMenu } = useMenuStore();
   const { initialize: initTables } = useTableStore();
 
-  // step: 'order_type' | 'table_select' | 'build_order' | 'submitted'
+  // step: 'order_type' | 'table_select' | 'build_order' | 'submitted' | 'kitchen'
   const [step, setStep] = useState('order_type');
   const [selectedTable, setSelectedTable] = useState(null);
   const [isTakeaway, setIsTakeaway] = useState(false);
@@ -109,9 +110,24 @@ export default function WaiterApp({ session }) {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ fontSize: 13, color: 'var(--sidebar-text)' }}>
-            👤 {session.name}
-          </div>
+          {/* Kitchen toggle */}
+          <button
+            onClick={() => setStep(step === 'kitchen' ? 'order_type' : 'kitchen')}
+            style={{
+              background: step === 'kitchen' ? 'rgba(76,175,120,0.2)' : 'rgba(255,255,255,0.07)',
+              border: `1px solid ${step === 'kitchen' ? 'var(--accent)' : 'rgba(255,255,255,0.1)'}`,
+              color: step === 'kitchen' ? 'var(--accent)' : 'var(--sidebar-text)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '5px 12px',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+            id="waiter-kitchen-btn"
+          >
+            🍳 Kitchen
+          </button>
+          <div style={{ fontSize: 13, color: 'var(--sidebar-text)' }}>👤 {session.name}</div>
           <button
             className="btn btn-sm"
             onClick={logout}
@@ -154,6 +170,9 @@ export default function WaiterApp({ session }) {
             onNewOrder={handleNewOrder}
           />
         )}
+
+        {/* Kitchen view */}
+        {step === 'kitchen' && <KitchenDisplay />}
       </div>
     </div>
   );

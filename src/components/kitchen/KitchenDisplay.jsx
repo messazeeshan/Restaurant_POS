@@ -17,7 +17,7 @@ import NotificationBell from '../notifications/NotificationBell.jsx';
  * KitchenDisplay — fullscreen KDS with ACCEPT flow, SLA alerts, audio, and cross-tab sync
  */
 export default function KitchenDisplay() {
-  const { getKitchenOrders: getDineInOrders, transitionOrderStatus, acceptOrder, initialize: initOrders } = useOrderStore();
+  const { getKitchenOrders: getDineInOrders, transitionOrderStatus, acceptOrder, voidOrder, initialize: initOrders } = useOrderStore();
   const { getKitchenOrders: getDeliveryOrders, markReady: markDeliveryReady } = useDeliveryStore();
   const { addToast } = useAppStore();
   const { addNotification } = useNotificationStore();
@@ -154,9 +154,27 @@ export default function KitchenDisplay() {
       const nextStatus = isPaid ? ORDER_STATUS.CLOSED : ORDER_STATUS.READY;
       transitionOrderStatus(order.id, nextStatus, null);
       broadcast(SYNC_EVENTS.ORDER_READY, { orderId: order.id });
-      addToast({ type: 'success', message: `Table ${order.tableId} bumped — ${isPaid ? 'completed' : 'ready'}!` });
+      addToast({ type: 'success', message: `${order.tableId ? `Table ${order.tableId}` : 'Order'} — ${isPaid ? 'completed' : 'ready'}!` });
     }
     setRecalledTickets((prev) => [order, ...prev.slice(0, 4)]);
+  };
+
+  const handleAccept = (order) => {
+    acceptOrder(order.id);
+    broadcast(SYNC_EVENTS.ORDER_ACCEPTED, { orderId: order.id });
+    addToast({ type: 'success', message: `${order.tableId ? `Table ${order.tableId}` : 'Order'} accepted.` });
+  };
+
+  const handlePrepStarted = (order) => {
+    transitionOrderStatus(order.id, ORDER_STATUS.PREP_STARTED, null);
+    broadcast(SYNC_EVENTS.ORDER_ACCEPTED, { orderId: order.id });
+    addToast({ type: 'info', message: `Prep started — ${order.tableId ? `Table ${order.tableId}` : 'Order'}.` });
+  };
+
+  const handleVoid = (order) => {
+    voidOrder(order.id, null);
+    broadcast(SYNC_EVENTS.ORDER_READY, { orderId: order.id });
+    addToast({ type: 'warning', message: `Order ${order.tableId ? `Table ${order.tableId}` : order.id} cancelled.` });
   };
 
   const STATIONS = Object.values(KITCHEN_STATION);
@@ -293,6 +311,9 @@ export default function KitchenDisplay() {
                     key={order.id}
                     order={order}
                     onBump={() => handleBump(order)}
+                    onAccept={() => handleAccept(order)}
+                    onPrepStarted={() => handlePrepStarted(order)}
+                    onVoid={() => handleVoid(order)}
                   />
                 ))}
                 {(rushOrders.length > 0 || normalOrders.length > 0) && (
@@ -318,6 +339,9 @@ export default function KitchenDisplay() {
                     key={order.id}
                     order={order}
                     onBump={() => handleBump(order)}
+                    onAccept={() => handleAccept(order)}
+                    onPrepStarted={() => handlePrepStarted(order)}
+                    onVoid={() => handleVoid(order)}
                   />
                 ))}
                 {normalOrders.length > 0 && (
@@ -338,6 +362,9 @@ export default function KitchenDisplay() {
                 key={order.id}
                 order={order}
                 onBump={() => handleBump(order)}
+                onAccept={() => handleAccept(order)}
+                onPrepStarted={() => handlePrepStarted(order)}
+                onVoid={() => handleVoid(order)}
               />
             ))}
           </>

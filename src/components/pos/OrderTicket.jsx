@@ -51,6 +51,7 @@ export default function OrderTicket({
   const canPay = [
     ORDER_STATUS.IN_KITCHEN,
     ORDER_STATUS.ACCEPTED,
+    ORDER_STATUS.PREP_STARTED,
     ORDER_STATUS.READY,
   ].includes(order.status);
 

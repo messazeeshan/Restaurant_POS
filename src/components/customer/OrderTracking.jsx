@@ -3,17 +3,18 @@ import { PlusCircle } from 'lucide-react';
 import { ORDER_STATUS } from '../../data/constants.js';
 
 const STEPS = [
-  { key: ORDER_STATUS.PENDING_ADMIN, label: 'Received' },
-  { key: ORDER_STATUS.IN_KITCHEN,    label: 'In Kitchen' },
+  { key: ORDER_STATUS.PENDING_ADMIN, label: 'Order Received' },
+  { key: ORDER_STATUS.IN_KITCHEN,    label: 'Sent to Kitchen' },
   { key: ORDER_STATUS.ACCEPTED,      label: 'Being Prepared' },
-  { key: ORDER_STATUS.READY,         label: 'Ready' },
+  { key: ORDER_STATUS.PREP_STARTED,  label: 'Cooking in Progress' },
+  { key: ORDER_STATUS.READY,         label: 'Ready for Collection' },
 ];
 
 function getStepIndex(status) {
   if (!status) return -1;
   const idx = STEPS.findIndex((s) => s.key === status);
   if (idx >= 0) return idx;
-  if (status === ORDER_STATUS.CLOSED || status === ORDER_STATUS.PAID) return 3;
+  if (status === ORDER_STATUS.CLOSED || status === ORDER_STATUS.PAID) return 4;
   return 0;
 }
 

@@ -157,13 +157,12 @@ export default function FloorPlan() {
             Status Legend
           </div>
           {[
-            { color: 'var(--table-available)', label: 'Available', count: stats.available },
-            { color: 'var(--table-seated)',    label: 'Seated',    count: tables.filter(t => t.status === 'SEATED').length },
-            { color: '#4A9EFF',                label: 'Ordered',   count: tables.filter(t => t.status === 'IN_KITCHEN').length },
-            { color: '#A855F7',                label: 'Food Ready',count: tables.filter(t => t.status === 'READY').length },
-            { color: '#00C4B5',                label: 'Paid',      count: tables.filter(t => t.status === 'PAID').length },
-            { color: 'var(--table-bill)',      label: 'Bill Req.', count: tables.filter(t => t.status === 'BILL_REQUESTED').length },
-            { color: 'var(--table-reserved)',  label: 'Reserved',  count: stats.reserved },
+            { color: 'var(--table-available)', label: 'Available',         count: stats.available },
+            { color: 'var(--table-seated)',    label: 'Seated',            count: tables.filter(t => t.status === 'SEATED').length },
+            { color: '#4A9EFF',                label: 'Ordered',           count: tables.filter(t => t.status === 'IN_KITCHEN').length },
+            { color: '#00C4B5',                label: 'Paid — Awaiting Food', count: tables.filter(t => t.status === 'PAID').length },
+            { color: '#A855F7',                label: 'Food Ready',        count: tables.filter(t => t.status === 'READY').length },
+            { color: 'var(--table-reserved)',  label: 'Reserved',          count: stats.reserved },
           ].map(({ color, label, count }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
