@@ -58,12 +58,9 @@ export default function KitchenTicket({ order, onBump, onAccept, onPrepStarted, 
   }, [timerBase, order.status]);
 
   const handleBump = async () => {
-    const label = order.type === 'DELIVERY' ? 'this delivery order'
-      : order.tableId ? `Table ${order.tableId}` : 'this takeaway order';
-    if (!window.confirm(`Mark ${label} as READY?`)) return;
     setBumping(true);
     await new Promise((r) => setTimeout(r, 300));
-    onBump();
+    if (onBump) onBump();
   };
 
   const handleVoid = () => {
@@ -215,25 +212,27 @@ export default function KitchenTicket({ order, onBump, onAccept, onPrepStarted, 
         )}
 
         {/* Cancel button */}
-        <button
-          onClick={() => setShowCancelModal(true)}
-          style={{
-            display: 'block',
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--danger)',
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer',
-            padding: '6px 14px 10px',
-            textAlign: 'center',
-            letterSpacing: '0.02em',
-          }}
-          id={`kds-cancel-${order.id}`}
-        >
-          Cancel ✕
-        </button>
+        {order.status !== ORDER_STATUS.READY && order.status !== ORDER_STATUS.PAID && (
+          <button
+            onClick={() => setShowCancelModal(true)}
+            style={{
+              display: 'block',
+              width: '100%',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--danger)',
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '6px 14px 10px',
+              textAlign: 'center',
+              letterSpacing: '0.02em',
+            }}
+            id={`kds-cancel-${order.id}`}
+          >
+            Cancel ✕
+          </button>
+        )}
       </div>
 
       {/* Cancel Confirm Modal */}
