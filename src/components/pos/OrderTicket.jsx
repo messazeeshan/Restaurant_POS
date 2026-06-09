@@ -46,14 +46,8 @@ export default function OrderTicket({
   const totals = calcOrderTotals(order.items, { taxRate: 0.085, tipPercent: order.tipPercent || 0 });
 
   const isSent = order.status !== ORDER_STATUS.DRAFT;
-  const isPendingApproval = order.status === ORDER_STATUS.PENDING_ADMIN;
-  // Can only pay once order is in kitchen or beyond (not while waiting for approval)
-  const canPay = [
-    ORDER_STATUS.IN_KITCHEN,
-    ORDER_STATUS.ACCEPTED,
-    ORDER_STATUS.PREP_STARTED,
-    ORDER_STATUS.READY,
-  ].includes(order.status);
+  // Pay Now is available as soon as the order is submitted (any status except DRAFT)
+  const canPay = order.status !== ORDER_STATUS.DRAFT;
 
   const handleSendToKitchen = async () => {
     if (order.items.length === 0) return;
@@ -255,16 +249,10 @@ export default function OrderTicket({
           onClick={canPay ? onPayNow : undefined}
           disabled={order.items.length === 0 || !canPay}
           id="pay-now-btn"
-          title={isPendingApproval ? 'Order must be approved first' : !canPay ? 'Submit order first' : ''}
         >
           💳 Pay Now
         </button>
       </div>
-      {isPendingApproval && (
-        <div style={{ padding: '6px 16px 10px', fontSize: 11, color: 'var(--warning)', fontWeight: 600, textAlign: 'center' }}>
-          ⏳ Awaiting approval in Orders section
-        </div>
-      )}
     </div>
   );
 }
