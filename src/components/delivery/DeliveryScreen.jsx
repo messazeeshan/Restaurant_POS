@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import useDeliveryStore from '../../store/useDeliveryStore.js';
+import useOrderStore from '../../store/useOrderStore.js';
 import useAppStore from '../../store/useAppStore.js';
-import { ORDER_STATUS } from '../../data/constants.js';
+import { ORDER_STATUS, ORDER_TYPE } from '../../data/constants.js';
 import DeliveryDashboard from './DeliveryDashboard.jsx';
 import DeliveryOrderCard from './DeliveryOrderCard.jsx';
 import NewDeliveryOrderModal from './NewDeliveryOrderModal.jsx';
@@ -9,17 +9,19 @@ import NewDeliveryOrderModal from './NewDeliveryOrderModal.jsx';
 const TABS = ['All', 'New', 'In Kitchen', 'Ready', 'Completed'];
 
 export default function DeliveryScreen() {
-  const { orders } = useDeliveryStore();
+  const { orders: allOrders } = useOrderStore();
+  const orders = allOrders.filter(o => o.type === ORDER_TYPE.DELIVERY || o.type === ORDER_TYPE.ONLINE);
+  
   const [activeTab, setActiveTab] = useState('All');
   const [showNewOrder, setShowNewOrder] = useState(false);
 
   // Filter orders
   const filteredOrders = orders.filter(o => {
     if (activeTab === 'All') return true;
-    if (activeTab === 'New') return o.status === 'NEW';
-    if (activeTab === 'In Kitchen') return o.status === ORDER_STATUS.IN_KITCHEN;
+    if (activeTab === 'New') return o.status === ORDER_STATUS.PENDING_ADMIN;
+    if (activeTab === 'In Kitchen') return [ORDER_STATUS.IN_KITCHEN, ORDER_STATUS.ACCEPTED, ORDER_STATUS.PREP_STARTED].includes(o.status);
     if (activeTab === 'Ready') return o.status === ORDER_STATUS.READY;
-    if (activeTab === 'Completed') return o.status === 'COMPLETED';
+    if (activeTab === 'Completed') return o.status === ORDER_STATUS.CLOSED || o.status === ORDER_STATUS.PAID;
     return true;
   });
 
@@ -38,10 +40,10 @@ export default function DeliveryScreen() {
         <div className="tabs" style={{ marginTop: 24 }}>
           {TABS.map(tab => {
             const count = tab === 'All' ? orders.length : orders.filter(o => {
-              if (tab === 'New') return o.status === 'NEW';
-              if (tab === 'In Kitchen') return o.status === ORDER_STATUS.IN_KITCHEN;
+              if (tab === 'New') return o.status === ORDER_STATUS.PENDING_ADMIN;
+              if (tab === 'In Kitchen') return [ORDER_STATUS.IN_KITCHEN, ORDER_STATUS.ACCEPTED, ORDER_STATUS.PREP_STARTED].includes(o.status);
               if (tab === 'Ready') return o.status === ORDER_STATUS.READY;
-              if (tab === 'Completed') return o.status === 'COMPLETED';
+              if (tab === 'Completed') return o.status === ORDER_STATUS.CLOSED || o.status === ORDER_STATUS.PAID;
               return false;
             }).length;
 

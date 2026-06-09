@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Volume2, VolumeX, Clock, Layers, AlertTriangle } from 'lucide-react';
 import useOrderStore from '../../store/useOrderStore.js';
-import useDeliveryStore from '../../store/useDeliveryStore.js';
 import useAppStore from '../../store/useAppStore.js';
 import useNotificationStore from '../../store/useNotificationStore.js';
 import { ORDER_STATUS, KITCHEN_STATION, SLA } from '../../data/constants.js';
@@ -17,8 +16,7 @@ import NotificationBell from '../notifications/NotificationBell.jsx';
  * KitchenDisplay — fullscreen KDS with ACCEPT flow, SLA alerts, audio, and cross-tab sync
  */
 export default function KitchenDisplay() {
-  const { getKitchenOrders: getDineInOrders, transitionOrderStatus, acceptOrder, voidOrder, initialize: initOrders } = useOrderStore();
-  const { getKitchenOrders: getDeliveryOrders, markReady: markDeliveryReady } = useDeliveryStore();
+  const { getKitchenOrders, transitionOrderStatus, acceptOrder, voidOrder, initialize: initOrders } = useOrderStore();
   const { addToast } = useAppStore();
   const { addNotification } = useNotificationStore();
 
@@ -67,9 +65,7 @@ export default function KitchenDisplay() {
   }, [soundEnabled, audioReady]);
 
   // Detect new orders arriving and play tone
-  const dineInOrders = getDineInOrders();
-  const deliveryOrders = getDeliveryOrders();
-  const allKitchenOrders = [...dineInOrders, ...deliveryOrders].sort((a, b) => (a.sentAt || 0) - (b.sentAt || 0));
+  const allKitchenOrders = getKitchenOrders().sort((a, b) => (a.sentAt || 0) - (b.sentAt || 0));
 
   useEffect(() => {
     const currentIds = new Set(allKitchenOrders.map((o) => o.id));
@@ -145,8 +141,8 @@ export default function KitchenDisplay() {
 
 
   const handleBump = (order) => {
-    if (order.id.startsWith('DEL-')) {
-      markDeliveryReady(order.id);
+    if (order.type === ORDER_TYPE.DELIVERY || order.type === ORDER_TYPE.ONLINE) {
+      transitionOrderStatus(order.id, ORDER_STATUS.READY, null);
       broadcast(SYNC_EVENTS.ORDER_READY, { orderId: order.id });
       addToast({ type: 'success', message: `${order.source || 'Delivery'} order ${order.id} bumped — ready!` });
     } else {

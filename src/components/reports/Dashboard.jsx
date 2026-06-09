@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Users, DollarSign, BarChart2, Download } from 'lucide-react';
 import useOrderStore from '../../store/useOrderStore.js';
-import useDeliveryStore from '../../store/useDeliveryStore.js';
 import useStaffStore from '../../store/useStaffStore.js';
 import { formatCurrency, formatPercent } from '../../utils/formatters.js';
 import { calcAverageCheck, calcLaborCostPercent } from '../../utils/calculations.js';
@@ -13,15 +12,13 @@ const DATE_RANGES = ['Today', 'Yesterday', 'This Week', 'This Month'];
 
 export default function Dashboard() {
   const { getTodaysOrders, getClosedOrders, getPaidAndClosedOrders } = useOrderStore();
-  const { getCompletedOrders: getDeliveryCompletedOrders } = useDeliveryStore();
   const { getTotalLaborCost } = useStaffStore();
 
   const [dateRange, setDateRange] = useState('Today');
   const [activeTab, setActiveTab] = useState('transactions');
 
-  const deliveryOrders = getDeliveryCompletedOrders();
-  const todaysOrders = [...getTodaysOrders(), ...deliveryOrders.filter(o => o.closedAt && (Date.now() - o.closedAt < 86400000))];
-  const allOrders = [...getPaidAndClosedOrders(), ...deliveryOrders];
+  const todaysOrders = getTodaysOrders();
+  const allOrders = getPaidAndClosedOrders();
 
   // Filter based on date range
   const getFilteredOrders = () => {

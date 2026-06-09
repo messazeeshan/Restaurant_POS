@@ -8,7 +8,6 @@ import useAppStore from '../../store/useAppStore.js';
 import useAuthStore from '../../store/useAuthStore.js';
 import useStaffStore from '../../store/useStaffStore.js';
 import useSettingsStore from '../../store/useSettingsStore.js';
-import useDeliveryStore from '../../store/useDeliveryStore.js';
 import useOrderStore from '../../store/useOrderStore.js';
 import { VIEW } from '../../data/constants.js';
 import { getInitials } from '../../utils/formatters.js';
@@ -35,13 +34,12 @@ export default function Sidebar() {
   const { logout } = useAuthStore();
   const { getStaffById } = useStaffStore();
   const { getRestaurantName } = useSettingsStore();
-  const { getActiveOrders } = useDeliveryStore();
-  const { getPendingAdminOrders, getKitchenOrders } = useOrderStore();
+  const { getPendingAdminOrders, getKitchenOrders, getActiveOrders } = useOrderStore();
 
   const currentStaff = getStaffById(currentStaffId);
   const restaurantName = getRestaurantName();
   
-  const pendingDeliveryCount = getActiveOrders().filter(o => o.status === 'IN_KITCHEN' || o.status === 'READY').length;
+  const pendingDeliveryCount = getActiveOrders().filter(o => (o.type === 'DELIVERY' || o.type === 'ONLINE') && (o.status === 'IN_KITCHEN' || o.status === 'READY' || o.status === 'ACCEPTED' || o.status === 'PREP_STARTED')).length;
   const pendingAdminCount = getPendingAdminOrders().length;
   const kitchenCount = getKitchenOrders().length;
 

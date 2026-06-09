@@ -4,13 +4,13 @@ import { ORDER_STATUS } from '../../data/constants.js';
 import { formatCurrency } from '../../utils/formatters.js';
 
 export default function DeliveryDashboard({ orders }) {
-  const pendingCount = orders.filter(o => o.status === 'NEW' || o.status === 'CONFIRMED').length;
-  const inKitchenCount = orders.filter(o => o.status === ORDER_STATUS.IN_KITCHEN).length;
+  const pendingCount = orders.filter(o => o.status === ORDER_STATUS.PENDING_ADMIN).length;
+  const inKitchenCount = orders.filter(o => [ORDER_STATUS.IN_KITCHEN, ORDER_STATUS.ACCEPTED, ORDER_STATUS.PREP_STARTED].includes(o.status)).length;
   const readyCount = orders.filter(o => o.status === ORDER_STATUS.READY).length;
   
   // Calculate today's revenue from completed delivery orders
   const todayRevenue = orders
-    .filter(o => o.status === 'COMPLETED' && o.completedAt && (Date.now() - o.completedAt < 86400000))
+    .filter(o => (o.status === ORDER_STATUS.CLOSED || o.status === ORDER_STATUS.PAID) && (o.closedAt || o.paidAt) && (Date.now() - (o.closedAt || o.paidAt) < 86400000))
     .reduce((sum, o) => {
       const itemsTotal = o.items.reduce((s, i) => {
         const itemPrice = i.price || 0;

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import useDeliveryStore from '../../store/useDeliveryStore.js';
+import useOrderStore from '../../store/useOrderStore.js';
 import { ORDER_STATUS } from '../../data/constants.js';
 
 export default function DeliveryOrderCard({ order }) {
-  const { acceptOrder, rejectOrder, sendToKitchen, markReady, markComplete } = useDeliveryStore();
+  const { transitionOrderStatus, rejectOrder, closeOrder } = useOrderStore();
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -76,58 +76,50 @@ export default function DeliveryOrderCard({ order }) {
                 alert('Please provide a reason');
                 return;
               }
-              rejectOrder(order.id, rejectReason);
+              rejectOrder(order.id, rejectReason, null);
+              setRejecting(false);
             }}>Confirm</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
-            {(order.status === 'NEW' || order.status === 'CONFIRMED') && (
-              <>
-                <button 
-                  className="btn btn-primary" 
-                  style={{ flex: 1 }} 
-                  onClick={() => {
-                    acceptOrder(order.id, 20); // 20 min default ETA
-                    sendToKitchen(order.id);
-                  }}
-                >
-                  Accept & Send to Kitchen
-                </button>
-                <button 
-                  className="btn btn-secondary" 
-                  style={{ color: 'var(--danger)' }}
-                  onClick={() => setRejecting(true)}
-                >
-                  Reject
-                </button>
-              </>
+            {order.status === ORDER_STATUS.PENDING_ADMIN && (
+              <div style={{ flex: 1, textAlign: 'center', fontSize: 13, color: 'var(--warning)', padding: '8px 0', fontWeight: 600 }}>
+                ⏳ Awaiting Manager Approval in Orders Tab
+              </div>
             )}
 
-            {order.status === ORDER_STATUS.IN_KITCHEN && (
-              <button 
-                className="btn btn-warning" 
-                style={{ flex: 1 }} 
-                onClick={() => markReady(order.id)}
-              >
-                Mark Ready
-              </button>
+            {(order.status === ORDER_STATUS.IN_KITCHEN || order.status === ORDER_STATUS.ACCEPTED || order.status === ORDER_STATUS.PREP_STARTED) && (
+              <div style={{ flex: 1, textAlign: 'center', fontSize: 13, color: 'var(--info)', padding: '8px 0', fontWeight: 600 }}>
+                👨‍🍳 Being prepared in Kitchen
+              </div>
             )}
 
             {order.status === ORDER_STATUS.READY && (
               <button 
                 className="btn btn-success" 
                 style={{ flex: 1 }} 
-                onClick={() => markComplete(order.id)}
+                onClick={() => closeOrder(order.id)}
               >
-                Complete Order
+                Complete Delivery
               </button>
             )}
 
-            {(order.status === 'COMPLETED' || order.status === 'REJECTED') && (
+            {(order.status === ORDER_STATUS.CLOSED || order.status === ORDER_STATUS.PAID || order.status === ORDER_STATUS.REJECTED || order.status === ORDER_STATUS.VOID) && (
               <div style={{ flex: 1, textAlign: 'center', fontSize: 13, color: 'var(--text-muted)', padding: '8px 0' }}>
-                Order {order.status.toLowerCase()}
-                {order.rejectReason && ` - ${order.rejectReason}`}
+                Order {order.status === ORDER_STATUS.REJECTED ? 'Rejected' : order.status === ORDER_STATUS.VOID ? 'Voided' : 'Completed'}
+                {order.rejectionReason && ` - ${order.rejectionReason}`}
               </div>
+            )}
+            
+            {/* Allow rejecting if it's pending */}
+            {order.status === ORDER_STATUS.PENDING_ADMIN && (
+              <button 
+                className="btn btn-secondary btn-sm" 
+                style={{ color: 'var(--danger)' }}
+                onClick={() => setRejecting(true)}
+              >
+                Reject
+              </button>
             )}
           </div>
         )}

@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import MenuGrid from '../pos/MenuGrid.jsx';
 import ModifierModal from '../pos/ModifierModal.jsx';
-import useDeliveryStore from '../../store/useDeliveryStore.js';
-import { ORDER_TYPE } from '../../data/constants.js';
+import useOrderStore from '../../store/useOrderStore.js';
+import { ORDER_TYPE, ORDER_STATUS } from '../../data/constants.js';
 import { formatCurrency } from '../../utils/formatters.js';
+import { broadcast, SYNC_EVENTS } from '../../utils/sync.js';
 
 const SOURCES = ['Direct / Phone', 'Uber Eats', 'DoorDash', 'Talabat', 'Website', 'Manual'];
 
 export default function NewDeliveryOrderModal({ onClose }) {
-  const { createOrder, acceptOrder, sendToKitchen } = useDeliveryStore();
+  const { createOrder, addItemToOrder, updateOrder } = useOrderStore();
   const [items, setItems] = useState([]);
   const [modifierModalItem, setModifierModalItem] = useState(null);
 
@@ -58,17 +59,36 @@ export default function NewDeliveryOrderModal({ onClose }) {
     }
 
     const orderId = createOrder({
-      type: orderType,
-      source: source.replace(' / Phone', ''),
-      customerName: customerName.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-      instructions: instructions.trim(),
-      items,
+      type:                orderType,
+      source:              source.replace(' / Phone', ''),
+      customerName:        customerName.trim(),
+      phone:               phone.trim(),
+      address:             address.trim(),
+      specialInstructions: instructions.trim(),
+      status:              ORDER_STATUS.PENDING_ADMIN,
+      prePaid:             false,
     });
 
-    acceptOrder(orderId, parseInt(estTime) || 20);
-    sendToKitchen(orderId);
+    // Add items
+    items.forEach((item) => {
+      addItemToOrder(orderId, {
+        id:             item.id,
+        itemId:         item.itemId,
+        name:           item.name,
+        price:          item.price,
+        quantity:       item.quantity,
+        modifiers:      item.modifiers || [],
+        specialRequest: item.specialRequest || '',
+        seatNumber:     null,
+      });
+    });
+
+    // Write totals
+    updateOrder(orderId, { subtotal, tax, total });
+
+    // Broadcast so the Orders section badge updates immediately
+    broadcast(SYNC_EVENTS.ORDER_SUBMITTED, { orderId });
+
     onClose();
   };
 

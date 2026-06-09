@@ -525,7 +525,49 @@ export function buildSeedOrders(tables, menu, staff) {
     statusHistory: [{ status: ORDER_STATUS.DRAFT, timestamp: mins(22), staffId: 'staff-jamie' }, { status: ORDER_STATUS.SENT, timestamp: mins(20), staffId: 'staff-jamie' }],
   };
 
-  return [t3Order, t5Order, b2Order];
+  const deliveryOrder1 = {
+    id: 'DEL-001',
+    type: ORDER_TYPE.DELIVERY,
+    source: 'Uber Eats',
+    status: ORDER_STATUS.IN_KITCHEN,
+    customerName: 'Alex Johnson',
+    items: [
+      { id: uid(), itemId: 'item-001', name: 'Truffle Burger', price: 18, quantity: 2, modifiers: [], specialRequest: '', seatNumber: null }
+    ],
+    createdAt: mins(6),
+    sentAt: mins(5),
+    etaAt: Date.now() + 15 * 60000,
+    tipPercent: 0, discountAmount: 0, paymentMethod: null,
+  };
+
+  const deliveryOrder2 = {
+    id: 'DEL-002',
+    type: ORDER_TYPE.ONLINE,
+    source: 'Direct',
+    status: ORDER_STATUS.PENDING_ADMIN,
+    customerName: 'Sam Smith',
+    items: [
+      { id: uid(), itemId: 'item-008', name: 'Wedge Salad', price: 13, quantity: 1, modifiers: [], specialRequest: '', seatNumber: null }
+    ],
+    createdAt: mins(2),
+    tipPercent: 0, discountAmount: 0, paymentMethod: null,
+  };
+
+  const deliveryOrder3 = {
+    id: 'DEL-003',
+    type: ORDER_TYPE.DELIVERY,
+    source: 'DoorDash',
+    status: ORDER_STATUS.READY,
+    customerName: 'Jamie Lee',
+    items: [
+      { id: uid(), itemId: 'item-009', name: 'Ribeye Steak 12oz', price: 52, quantity: 3, modifiers: [{name: 'Medium Rare', priceModifier: 0}], specialRequest: '', seatNumber: null }
+    ],
+    createdAt: mins(40),
+    etaAt: Date.now() + 5 * 60000,
+    tipPercent: 0, discountAmount: 0, paymentMethod: null,
+  };
+
+  return [t3Order, t5Order, b2Order, deliveryOrder1, deliveryOrder2, deliveryOrder3];
 }
 
 // ── Historical Orders (for reports) ──────────────────────────
