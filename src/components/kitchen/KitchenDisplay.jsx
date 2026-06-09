@@ -3,7 +3,7 @@ import { Volume2, VolumeX, Clock, Layers, AlertTriangle } from 'lucide-react';
 import useOrderStore from '../../store/useOrderStore.js';
 import useAppStore from '../../store/useAppStore.js';
 import useNotificationStore from '../../store/useNotificationStore.js';
-import { ORDER_STATUS, KITCHEN_STATION, SLA } from '../../data/constants.js';
+import { ORDER_STATUS, ORDER_TYPE, KITCHEN_STATION, SLA } from '../../data/constants.js';
 import { broadcast, onSync, SYNC_EVENTS } from '../../utils/sync.js';
 import {
   initAudio, isAudioInitialized, isAudioEnabled, setAudioEnabled,
