@@ -65,7 +65,7 @@ export default function CustomerApp() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', height: '100dvh', background: '#FDFAF5', fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: '100dvh', background: '#FDFAF5', fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Header — sticky */}
       <header style={{
         background: '#fff',

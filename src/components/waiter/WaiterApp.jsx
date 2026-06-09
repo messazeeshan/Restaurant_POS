@@ -80,10 +80,12 @@ export default function WaiterApp({ session }) {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      width: '100vw',
+      height: '100dvh',
       background: 'var(--bg-app)',
       display: 'flex',
       flexDirection: 'column',
+      overflow: 'hidden',
     }}>
       {/* Top Bar */}
       <header style={{

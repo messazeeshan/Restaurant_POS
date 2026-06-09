@@ -25,7 +25,7 @@ export default function OrderTracking({ orderId, orders, onNewOrder }) {
 
   if (order?.status === ORDER_STATUS.REJECTED) {
     return (
-      <div style={{ minHeight: '100vh', background: '#FDFAF5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 }}>
+      <div style={{ width: '100vw', minHeight: '100dvh', background: '#FDFAF5', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 }}>
         <div style={{ fontSize: 52 }}>❌</div>
         <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: 22, color: '#1A1A1A' }}>Order Not Accepted</div>
         <div style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', maxWidth: 320 }}>
@@ -39,7 +39,7 @@ export default function OrderTracking({ orderId, orders, onNewOrder }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FDFAF5', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ width: '100vw', minHeight: '100dvh', background: '#FDFAF5', fontFamily: "'Inter', sans-serif" }}>
       {/* Header */}
       <div style={{ background: '#1E5C3A', padding: '32px 24px 24px', color: '#fff', textAlign: 'center' }}>
         <div style={{ fontSize: 12, fontWeight: 600, opacity: 0.7, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Order Confirmed</div>
