@@ -98,7 +98,7 @@ export default function DeliveryOrderCard({ order }) {
               <button 
                 className="btn btn-success" 
                 style={{ flex: 1 }} 
-                onClick={() => closeOrder(order.id)}
+                onClick={() => closeOrder(order.id, { ...order, paymentMethod: order.paymentMethod || order.source || 'Delivery' })}
               >
                 Complete Delivery
               </button>
