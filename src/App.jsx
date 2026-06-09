@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import useAppStore from './store/useAppStore.js';
+import useAuthStore from './store/useAuthStore.js';
 import useMenuStore from './store/useMenuStore.js';
 import useOrderStore from './store/useOrderStore.js';
 import useTableStore from './store/useTableStore.js';
@@ -11,6 +12,7 @@ import {
   SEED_SETTINGS, buildSeedOrders, buildHistoricalOrders,
 } from './data/seedData.js';
 import { isInitialized, markInitialized, loadAllStorage } from './utils/persistence.js';
+import { onSync } from './utils/sync.js';
 import { VIEW } from './data/constants.js';
 
 import Sidebar from './components/layout/Sidebar.jsx';
@@ -24,6 +26,9 @@ import StaffManager from './components/staff/StaffManager.jsx';
 import Dashboard from './components/reports/Dashboard.jsx';
 import CustomerManager from './components/customers/CustomerManager.jsx';
 import SettingsPanel from './components/settings/SettingsPanel.jsx';
+import LoginScreen from './components/auth/LoginScreen.jsx';
+import WaiterApp from './components/waiter/WaiterApp.jsx';
+import OrdersDashboard from './components/admin/OrdersDashboard.jsx';
 
 // ── Toast Notification System ─────────────────────────────────
 function ToastContainer() {
@@ -70,6 +75,7 @@ function ToastContainer() {
 // ── Main App ──────────────────────────────────────────────────
 export default function App() {
   const { currentView, theme, setTheme } = useAppStore();
+  const { session } = useAuthStore();
   const { initialize: initMenu } = useMenuStore();
   const { initialize: initOrders } = useOrderStore();
   const { initialize: initTables } = useTableStore();
@@ -119,18 +125,54 @@ export default function App() {
       if (stored.orders)    initOrders(stored.orders);
 
       // If no data was stored, seed anyway
-      if (!stored.menu) initMenu(SEED_MENU);
-      if (!stored.tables) initTables(SEED_TABLES);
-      if (!stored.staff) initStaff(SEED_STAFF);
+      if (!stored.menu)      initMenu(SEED_MENU);
+      if (!stored.tables)    initTables(SEED_TABLES);
+      if (!stored.staff)     initStaff(SEED_STAFF);
       if (!stored.customers) initCustomers(SEED_CUSTOMERS);
-      if (!stored.settings) initSettings(SEED_SETTINGS);
+      if (!stored.settings)  initSettings(SEED_SETTINGS);
     }
   }, []);
 
-  // ── View renderer ───────────────────────────────────────────
+  // ── Cross-tab sync listener ─────────────────────────────────
+  useEffect(() => {
+    const cleanup = onSync(() => {
+      // Re-read orders from localStorage on any sync event
+      const raw = localStorage.getItem('pos_orders');
+      if (raw) {
+        try {
+          const orders = JSON.parse(raw);
+          useOrderStore.getState().initialize(orders);
+        } catch {}
+      }
+    });
+    return cleanup;
+  }, []);
+
+  // ── No session → show login ─────────────────────────────────
+  if (!session) {
+    return (
+      <>
+        <LoginScreen />
+        <ToastContainer />
+      </>
+    );
+  }
+
+  // ── Waiter session → show Waiter UI ─────────────────────────
+  if (session.role === 'waiter') {
+    return (
+      <>
+        <WaiterApp session={session} />
+        <ToastContainer />
+      </>
+    );
+  }
+
+  // ── Manager session → full POS ───────────────────────────────
   const renderView = () => {
     switch (currentView) {
       case VIEW.FLOOR:     return <FloorPlan />;
+      case VIEW.ORDERS:    return <OrdersDashboard />;
       case VIEW.ORDER:     return <OrderScreen />;
       case VIEW.KITCHEN:   return <KitchenDisplay />;
       case VIEW.DELIVERY:  return <DeliveryScreen />;
@@ -144,7 +186,7 @@ export default function App() {
   };
 
   const needsTopBar = ![VIEW.ORDER, VIEW.KITCHEN].includes(currentView);
-  const needsPadding = [VIEW.REPORTS, VIEW.SETTINGS].includes(currentView);
+  const needsPadding = [VIEW.REPORTS, VIEW.SETTINGS, VIEW.ORDERS].includes(currentView);
 
   return (
     <div className="app-shell">

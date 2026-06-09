@@ -4,21 +4,27 @@
 
 // ── Order State Machine ──────────────────────────────────────
 export const ORDER_STATUS = {
-  DRAFT: 'DRAFT',
-  IN_KITCHEN: 'IN_KITCHEN',
-  READY: 'READY',
-  PAID: 'PAID',
-  CLOSED: 'CLOSED',
-  VOID: 'VOID',
+  DRAFT:         'DRAFT',
+  PENDING_ADMIN: 'PENDING_ADMIN',
+  IN_KITCHEN:    'IN_KITCHEN',
+  ACCEPTED:      'ACCEPTED',
+  READY:         'READY',
+  PAID:          'PAID',
+  CLOSED:        'CLOSED',
+  VOID:          'VOID',
+  REJECTED:      'REJECTED',
 };
 
 export const ORDER_STATUS_LABELS = {
-  [ORDER_STATUS.DRAFT]: 'Draft',
-  [ORDER_STATUS.IN_KITCHEN]: 'In Kitchen',
-  [ORDER_STATUS.READY]: 'Ready',
-  [ORDER_STATUS.PAID]: 'Paid',
-  [ORDER_STATUS.CLOSED]: 'Closed',
-  [ORDER_STATUS.VOID]: 'Void',
+  [ORDER_STATUS.DRAFT]:         'Draft',
+  [ORDER_STATUS.PENDING_ADMIN]: 'Pending Approval',
+  [ORDER_STATUS.IN_KITCHEN]:    'In Kitchen',
+  [ORDER_STATUS.ACCEPTED]:      'Accepted',
+  [ORDER_STATUS.READY]:         'Ready',
+  [ORDER_STATUS.PAID]:          'Paid',
+  [ORDER_STATUS.CLOSED]:        'Closed',
+  [ORDER_STATUS.VOID]:          'Void',
+  [ORDER_STATUS.REJECTED]:      'Rejected',
 };
 
 export const ORDER_TYPE = {
@@ -176,29 +182,48 @@ export const SPLIT_METHOD = {
 
 // ── Navigation Views ─────────────────────────────────────────
 export const VIEW = {
-  FLOOR: 'floor',
-  ORDER: 'order',
-  KITCHEN: 'kitchen',
-  DELIVERY: 'delivery',
-  MENU: 'menu',
-  STAFF: 'staff',
-  REPORTS: 'reports',
+  FLOOR:     'floor',
+  ORDERS:    'orders',
+  ORDER:     'order',
+  KITCHEN:   'kitchen',
+  DELIVERY:  'delivery',
+  MENU:      'menu',
+  STAFF:     'staff',
+  REPORTS:   'reports',
   CUSTOMERS: 'customers',
-  SETTINGS: 'settings',
+  SETTINGS:  'settings',
 };
 
 // ── localStorage Keys ─────────────────────────────────────────
 export const STORAGE_KEYS = {
-  VERSION: 'pos_data_v1',
-  INITIALIZED: 'pos_initialized',
-  THEME: 'pos_theme',
-  ORDERS: 'pos_orders',
-  MENU: 'pos_menu',
-  TABLES: 'pos_tables',
-  STAFF: 'pos_staff',
-  CUSTOMERS: 'pos_customers',
-  SETTINGS: 'pos_settings',
-  ACTIVE_ORDER: 'pos_active_order',
+  VERSION:       'pos_data_v1',
+  INITIALIZED:   'pos_initialized',
+  THEME:         'pos_theme',
+  ORDERS:        'pos_orders',
+  MENU:          'pos_menu',
+  TABLES:        'pos_tables',
+  STAFF:         'pos_staff',
+  CUSTOMERS:     'pos_customers',
+  SETTINGS:      'pos_settings',
+  ACTIVE_ORDER:  'pos_active_order',
+  SESSION:       'pos_session',
+  AUDIO_ENABLED: 'pos_audio_enabled',
+  MESSAGES:      'pos_messages',
+  NOTIFICATIONS: 'pos_notifications',
+};
+
+// ── Auth Users (hardcoded — no backend needed) ────────────────
+export const AUTH_USERS = [
+  { username: 'manager', password: 'ember2025', role: 'manager', name: 'Alex Rivera', staffId: 'staff-alex' },
+  { username: 'sarah',   password: 'server123', role: 'waiter',  name: 'Sarah Chen',  staffId: 'staff-sarah' },
+  { username: 'marcus',  password: 'server123', role: 'waiter',  name: 'Marcus Williams', staffId: 'staff-marcus' },
+  { username: 'jamie',   password: 'bar123',    role: 'waiter',  name: 'Jamie Lee',   staffId: 'staff-jamie' },
+];
+
+// ── SLA Thresholds ─────────────────────────────────────────────
+export const SLA = {
+  ACCEPT_SECONDS:      120,   // 2 minutes to accept a ticket
+  ALERT_REPEAT_MS:     30000, // repeat SLA tone every 30s
 };
 
 // ── KDS Timer Thresholds (minutes) ────────────────────────────

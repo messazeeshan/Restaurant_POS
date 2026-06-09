@@ -3,9 +3,11 @@ import { Bell } from 'lucide-react';
 import useAppStore from '../../store/useAppStore.js';
 import useOrderStore from '../../store/useOrderStore.js';
 import { VIEW } from '../../data/constants.js';
+import NotificationBell from '../notifications/NotificationBell.jsx';
 
 const VIEW_TITLES = {
   [VIEW.FLOOR]:     'Floor Plan',
+  [VIEW.ORDERS]:    'Orders',
   [VIEW.ORDER]:     'Order Entry',
   [VIEW.KITCHEN]:   'Kitchen Display',
   [VIEW.MENU]:      'Menu Manager',
@@ -17,6 +19,7 @@ const VIEW_TITLES = {
 
 const VIEW_SUBTITLES = {
   [VIEW.FLOOR]:     'Manage tables and reservations',
+  [VIEW.ORDERS]:    'Approve or reject incoming orders',
   [VIEW.ORDER]:     'Take and manage orders',
   [VIEW.KITCHEN]:   'Active kitchen tickets',
   [VIEW.MENU]:      'Categories, items, and modifiers',
@@ -70,6 +73,9 @@ export default function TopBar({ actions }) {
 
       {/* Right: quick status + time */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        {/* Notification bell */}
+        <NotificationBell />
+
         {/* Kitchen alert */}
         {kitchenCount > 0 && (
           <div

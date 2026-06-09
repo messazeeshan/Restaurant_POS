@@ -46,6 +46,13 @@ export default function OrderTicket({
   const totals = calcOrderTotals(order.items, { taxRate: 0.085, tipPercent: order.tipPercent || 0 });
 
   const isSent = order.status !== ORDER_STATUS.DRAFT;
+  const isPendingApproval = order.status === ORDER_STATUS.PENDING_ADMIN;
+  // Can only pay once order is in kitchen or beyond (not while waiting for approval)
+  const canPay = [
+    ORDER_STATUS.IN_KITCHEN,
+    ORDER_STATUS.ACCEPTED,
+    ORDER_STATUS.READY,
+  ].includes(order.status);
 
   const handleSendToKitchen = async () => {
     if (order.items.length === 0) return;
@@ -234,23 +241,29 @@ export default function OrderTicket({
           id="send-kitchen-btn"
         >
           {sendingState === 'loading' ? (
-            <><span className="animate-spin" style={{ display: 'inline-block', fontSize: 14 }}>⌛</span> Sending...</>
+            <><span className="animate-spin" style={{ display: 'inline-block', fontSize: 14 }}>⌛</span> Submitting...</>
           ) : sendingState === 'sent' ? (
-            '✅ Sent!'
+            '✅ Submitted!'
           ) : (
-            <>🔥 Send to Kitchen</>
+            <>📋 Submit Order</>
           )}
         </button>
         <button
           className="btn btn-primary btn-sm"
-          style={{ flex: 2 }}
-          onClick={onPayNow}
-          disabled={order.items.length === 0}
+          style={{ flex: 2, opacity: canPay ? 1 : 0.45, cursor: canPay ? 'pointer' : 'not-allowed' }}
+          onClick={canPay ? onPayNow : undefined}
+          disabled={order.items.length === 0 || !canPay}
           id="pay-now-btn"
+          title={isPendingApproval ? 'Order must be approved first' : !canPay ? 'Submit order first' : ''}
         >
           💳 Pay Now
         </button>
       </div>
+      {isPendingApproval && (
+        <div style={{ padding: '6px 16px 10px', fontSize: 11, color: 'var(--warning)', fontWeight: 600, textAlign: 'center' }}>
+          ⏳ Awaiting approval in Orders section
+        </div>
+      )}
     </div>
   );
 }

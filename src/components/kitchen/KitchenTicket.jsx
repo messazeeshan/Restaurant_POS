@@ -6,7 +6,7 @@ import useStaffStore from '../../store/useStaffStore.js';
 
 /**
  * KitchenTicket — single KDS ticket card with live timer
- * @param {{ order: object, onBump: () => void }} props
+ * Only shows READY/COMPLETE button with a confirmation dialog.
  */
 export default function KitchenTicket({ order, onBump }) {
   const { getStaffById } = useStaffStore();
@@ -14,7 +14,9 @@ export default function KitchenTicket({ order, onBump }) {
   const [bumping, setBumping] = useState(false);
 
   const server = order.serverId ? getStaffById(order.serverId) : null;
-  const timerColorClass = getKDSTimerColor(order.sentAt, 8, 12);
+  // Use whichever timestamp is available so the timer always runs
+  const timerBase = order.sentAt || order.sentToKitchenAt || order.createdAt;
+  const timerColorClass = getKDSTimerColor(timerBase, 8, 12);
 
   // Update timer every second
   useEffect(() => {
@@ -23,12 +25,15 @@ export default function KitchenTicket({ order, onBump }) {
   }, []);
 
   const handleBump = async () => {
+    const label = order.type === 'DELIVERY' ? 'this delivery order'
+      : order.tableId ? `Table ${order.tableId}` : 'this takeaway order';
+    if (!window.confirm(`Mark ${label} as READY?`)) return;
     setBumping(true);
     await new Promise((r) => setTimeout(r, 300));
     onBump();
   };
 
-  const elapsedMins = elapsedMinutes(order.sentAt);
+  const elapsedMins = elapsedMinutes(timerBase);
 
   const isDelivery = order.type === ORDER_TYPE.DELIVERY;
   const isOnline = order.type === ORDER_TYPE.ONLINE;
@@ -77,9 +82,9 @@ export default function KitchenTicket({ order, onBump }) {
           <div
             className={`kds-timer ${timerColorClass}`}
             key={timerKey}
-            aria-label={`Time elapsed: ${formatKDSTimer(order.sentAt)}`}
+            aria-label={`Time elapsed: ${formatKDSTimer(timerBase)}`}
           >
-            {formatKDSTimer(order.sentAt)}
+            {formatKDSTimer(timerBase)}
           </div>
           {(etaMins !== null) && (
             <div style={{ fontSize: 11, marginTop: 4, fontWeight: 700, color: etaWarning ? 'var(--danger)' : 'var(--text-muted)' }}>
@@ -138,13 +143,13 @@ export default function KitchenTicket({ order, onBump }) {
         ))}
       </div>
 
-      {/* Bump button */}
+      {/* Single READY button — confirm dialog acts as guard */}
       <button
         className="kds-bump-btn"
         style={isPaid ? { background: 'var(--success)', color: '#fff' } : {}}
         onClick={handleBump}
         disabled={bumping}
-        aria-label={`Bump ticket for ${order.tableId ? 'Table ' + order.tableId : 'Takeaway'}`}
+        aria-label={`Mark ${order.tableId ? 'Table ' + order.tableId : 'order'} as ready`}
         id={`kds-bump-${order.id}`}
       >
         <Check size={18} />

@@ -13,27 +13,43 @@ const useOrderStore = create((set, get) => ({
   initialize: (orders) => set({ orders }),
 
   // ── Create a new order ────────────────────────────────────
-  createOrder: ({ tableId, serverId, partySize }) => {
+  createOrder: ({ tableId, serverId, partySize, type, source, specialInstructions, prePaid, externalOrderId, customerName, status: initialStatus }) => {
     const id = `order-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    const startStatus = initialStatus || ORDER_STATUS.DRAFT;
     const order = {
       id,
-      tableId,
-      serverId,
-      partySize,
-      status: ORDER_STATUS.DRAFT,
-      items: [],
-      tipPercent: 0,
-      discountAmount: 0,
-      discount: null,
-      paymentMethod: null,
-      createdAt: Date.now(),
-      sentAt: null,
-      closedAt: null,
-      total: 0,
-      subtotal: 0,
-      tax: 0,
-      tip: 0,
-      statusHistory: [{ status: ORDER_STATUS.DRAFT, timestamp: Date.now(), staffId: null }],
+      tableId:             tableId || null,
+      serverId:            serverId || null,
+      partySize:           partySize || 1,
+      type:                type || 'DINE_IN',
+      source:              source || 'POS',
+      customerName:        customerName || null,
+      specialInstructions: specialInstructions || '',
+      prePaid:             prePaid || false,
+      externalOrderId:     externalOrderId || null,
+      status:              startStatus,
+      items:               [],
+      tipPercent:          0,
+      discountAmount:      0,
+      discount:            null,
+      paymentMethod:       null,
+      createdAt:           Date.now(),
+      submittedAt:         startStatus === ORDER_STATUS.PENDING_ADMIN ? Date.now() : null,
+      approvedAt:          null,
+      sentAt:              null,
+      sentToKitchenAt:     null,
+      acceptedAt:          null,
+      readyAt:             null,
+      paidAt:              null,
+      closedAt:            null,
+      rejectedAt:          null,
+      rejectionReason:     null,
+      smsConfirmationSent: false,
+      total:               0,
+      subtotal:            0,
+      tax:                 0,
+      tip:                 0,
+      statusHistory:       [{ status: startStatus, timestamp: Date.now(), staffId: null }],
     };
     const orders = [order, ...get().orders].slice(0, 500);
     set({ orders, activeOrderId: id });
@@ -118,12 +134,19 @@ const useOrderStore = create((set, get) => ({
         closedAt = Date.now();
       }
 
+      const now = Date.now();
       const statusHistory = [
         ...o.statusHistory,
-        { status: finalStatus, timestamp: Date.now(), staffId },
+        { status: finalStatus, timestamp: now, staffId },
       ];
       const updates = { status: finalStatus, statusHistory, closedAt };
-      if (finalStatus === ORDER_STATUS.IN_KITCHEN) updates.sentAt = Date.now();
+      if (finalStatus === ORDER_STATUS.IN_KITCHEN) {
+        updates.sentAt = now;
+        updates.sentToKitchenAt = now;
+      }
+      if (finalStatus === ORDER_STATUS.ACCEPTED) updates.acceptedAt = now;
+      if (finalStatus === ORDER_STATUS.READY)     updates.readyAt    = now;
+      if (finalStatus === ORDER_STATUS.PENDING_ADMIN) updates.submittedAt = now;
       
       return { ...o, ...updates };
     });
@@ -171,37 +194,126 @@ const useOrderStore = create((set, get) => ({
     set({ activeOrderId: null });
   },
 
+  // ── Approve a PENDING_ADMIN order ───────────────────────────────────
+approvePendingOrder: (orderId, staffId) => {
+    const now = Date.now();
+    const orders = get().orders.map((o) => {
+      if (o.id !== orderId) return o;
+      return {
+        ...o,
+        status:          ORDER_STATUS.IN_KITCHEN,
+        approvedAt:      now,
+        sentAt:          now,
+        sentToKitchenAt: now,
+        statusHistory:   [...o.statusHistory, { status: ORDER_STATUS.IN_KITCHEN, timestamp: now, staffId }],
+      };
+    });
+    set({ orders });
+    persistStorage.orders(orders);
+  },
+
+  // ── Reject a PENDING_ADMIN order ───────────────────────────────────
+  rejectOrder: (orderId, reason, staffId) => {
+    const now = Date.now();
+    const orders = get().orders.map((o) => {
+      if (o.id !== orderId) return o;
+      return {
+        ...o,
+        status:          ORDER_STATUS.REJECTED,
+        rejectedAt:      now,
+        rejectionReason: reason,
+        statusHistory:   [...o.statusHistory, { status: ORDER_STATUS.REJECTED, timestamp: now, staffId }],
+      };
+    });
+    set({ orders });
+    persistStorage.orders(orders);
+  },
+
+  // ── Accept a ticket on the KDS (clears SLA timer) ──────────────────
+  acceptOrder: (orderId) => {
+    const now = Date.now();
+    const orders = get().orders.map((o) => {
+      if (o.id !== orderId) return o;
+      return {
+        ...o,
+        status:      ORDER_STATUS.ACCEPTED,
+        acceptedAt:  now,
+        statusHistory: [...o.statusHistory, { status: ORDER_STATUS.ACCEPTED, timestamp: now, staffId: null }],
+      };
+    });
+    set({ orders });
+    persistStorage.orders(orders);
+  },
+
+  // ── Mark SMS sent ────────────────────────────────────────────────
+  markSmsSent: (orderId) => {
+    const orders = get().orders.map((o) =>
+      o.id === orderId ? { ...o, smsConfirmationSent: true } : o
+    );
+    set({ orders });
+    persistStorage.orders(orders);
+  },
+
   // ── Getters ───────────────────────────────────────────────
   getOrderById: (id) => get().orders.find((o) => o.id === id),
 
   getOrderByTableId: (tableId) =>
     get().orders.find(
-      (o) => o.tableId === tableId && o.status !== ORDER_STATUS.CLOSED && o.status !== ORDER_STATUS.VOID
+      (o) => o.tableId === tableId &&
+        o.status !== ORDER_STATUS.CLOSED &&
+        o.status !== ORDER_STATUS.VOID &&
+        o.status !== ORDER_STATUS.REJECTED
     ),
 
   getActiveOrders: () =>
     get().orders.filter(
-      (o) => o.status !== ORDER_STATUS.CLOSED && o.status !== ORDER_STATUS.VOID
+      (o) => o.status !== ORDER_STATUS.CLOSED &&
+        o.status !== ORDER_STATUS.VOID &&
+        o.status !== ORDER_STATUS.REJECTED
     ),
 
+  // Kitchen shows IN_KITCHEN, ACCEPTED, and PAID orders
   getKitchenOrders: () =>
     get().orders.filter(
-      (o) => o.status === ORDER_STATUS.IN_KITCHEN || o.status === ORDER_STATUS.PAID
+      (o) => o.status === ORDER_STATUS.IN_KITCHEN ||
+             o.status === ORDER_STATUS.ACCEPTED ||
+             o.status === ORDER_STATUS.PAID
     ),
+
+  // Orders waiting for manager approval
+  getPendingAdminOrders: () =>
+    get().orders.filter((o) => o.status === ORDER_STATUS.PENDING_ADMIN),
+
+  // Tickets in IN_KITCHEN state not yet accepted and past 2-minute SLA
+  getSLABreachedOrders: () => {
+    const threshold = Date.now() - 120000;
+    return get().orders.filter(
+      (o) => o.status === ORDER_STATUS.IN_KITCHEN &&
+        !o.acceptedAt &&
+        o.sentToKitchenAt &&
+        o.sentToKitchenAt < threshold
+    );
+  },
 
   getClosedOrders: () =>
     get().orders.filter((o) => o.status === ORDER_STATUS.CLOSED),
 
-  // Revenue selectors: include both CLOSED and PAID (paid early, still in kitchen)
   getPaidAndClosedOrders: () =>
     get().orders.filter((o) => o.status === ORDER_STATUS.CLOSED || o.status === ORDER_STATUS.PAID),
 
   getTodaysOrders: () => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    return get()
-      .getPaidAndClosedOrders()
-      .filter((o) => (o.closedAt || o.paidAt) >= startOfDay.getTime());
+    const start = startOfDay.getTime();
+    return get().orders.filter((o) => {
+      const ts = o.paidAt || o.closedAt || 0;
+      if (ts < start) return false;
+      // Fully closed/paid orders
+      if (o.status === ORDER_STATUS.CLOSED || o.status === ORDER_STATUS.PAID) return true;
+      // Pre-paid customer orders still in kitchen
+      if (o.prePaid && o.paidAt) return true;
+      return false;
+    });
   },
 
   getActiveOrder: () => {

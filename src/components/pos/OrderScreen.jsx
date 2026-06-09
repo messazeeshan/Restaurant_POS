@@ -85,12 +85,12 @@ export default function OrderScreen() {
     setModifierItem(null);
   };
 
-  // ── Send to kitchen ───────────────────────────────────────────
+  // ── Send to kitchen (via Orders approval section) ───────────────
   const handleSendToKitchen = () => {
     if (!order || order.items.length === 0) return;
-    transitionOrderStatus(localOrderId, ORDER_STATUS.IN_KITCHEN, currentStaffId);
+    transitionOrderStatus(localOrderId, ORDER_STATUS.PENDING_ADMIN, currentStaffId);
     if (activeTableId) setTableOrder(activeTableId, localOrderId);
-    addToast({ type: 'success', message: '🔥 Order sent to kitchen!' });
+    addToast({ type: 'success', message: '📋 Order submitted — approve it in Orders section.' });
   };
 
   // ── Hold order ────────────────────────────────────────────────
@@ -198,16 +198,16 @@ function OrderSetupModal({ onStartOrder, onCancel }) {
   const availableTables = tables.filter(t => t.status === 'AVAILABLE');
   const availableStaff = staff.filter(s => s.clockedIn);
 
-  const isComplete = orderType === 'TAKEOUT' 
-    ? selectedServer !== ''
+  const isComplete = orderType === 'TAKEOUT'
+    ? true
     : (selectedTable && selectedServer);
 
   const handleStart = () => {
     onStartOrder({
       orderType,
-      tableId: orderType === 'DINE_IN' ? selectedTable : null,
-      serverId: selectedServer,
-      partySize: orderType === 'DINE_IN' ? partySize : 1
+      tableId:   orderType === 'DINE_IN' ? selectedTable : null,
+      serverId:  orderType === 'DINE_IN' ? selectedServer : null,
+      partySize: orderType === 'DINE_IN' ? partySize : 1,
     });
   };
 
@@ -234,21 +234,23 @@ function OrderSetupModal({ onStartOrder, onCancel }) {
           </button>
         </div>
 
-        {/* Server Selection */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assign Staff</label>
-          <select 
-            className="input" 
-            style={{ width: '100%', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }} 
-            value={selectedServer} 
-            onChange={(e) => setSelectedServer(e.target.value)}
-          >
-            <option value="" disabled>Select Staff Member...</option>
-            {availableStaff.map(s => (
-              <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
-            ))}
-          </select>
-        </div>
+        {/* Server Selection — Dine-In only */}
+        {orderType === 'DINE_IN' && (
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Assign Staff</label>
+            <select
+              className="input"
+              style={{ width: '100%', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+              value={selectedServer}
+              onChange={(e) => setSelectedServer(e.target.value)}
+            >
+              <option value="" disabled>Select Staff Member...</option>
+              {availableStaff.map(s => (
+                <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Dine In specifics */}
         {orderType === 'DINE_IN' && (
